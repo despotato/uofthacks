@@ -1,61 +1,66 @@
 # Live Friends Map (MVP)
-A map-first “live friends” web app with Google OAuth, Mongo-backed sessions, paging via email, and a lightweight suggestion engine that learns from feedback.
+A map-first “live friends” web app with Google OAuth (or dev login), Mongo-backed sessions, paging via email, and a simple learning suggestion engine. Frontend is plain HTML/CSS/JS with Leaflet; backend is Express + Mongoose. Package-lock is present—use `npm install` (not yarn/pnpm) to stay consistent.
 
 ## Quickstart
-1) Install deps: `npm install`
-2) Copy env: `cp .env.example .env` then fill Mongo + Google creds (or leave Google blank and use Dev Login).  
-3) Run dev server: `npm run dev` (listens on `http://localhost:3000`)
+1) Install: `npm install`
+2) Env: `cp .env.example .env` and fill values (Mongo URI + session secret required).
+3) Run: `npm run dev` then open http://localhost:3000
 
-## Environment variables
-See `.env.example` for all variables. Required: `MONGO_URI`, `SESSION_SECRET`. Optional: Google OAuth keys, SMTP creds (for real email), `AMPLITUDE_API_KEY`.
+## Stack at a glance
+- Backend: Express, Passport (Google OAuth), sessions via connect-mongo, zod validation, nodemailer.
+- Frontend: `public/` with vanilla JS modules; Leaflet + OSM tiles (no key required).
+- Data: MongoDB + Mongoose models for users, presence, pages, suggestion weights/feedback.
+- Instrumentation: Amplitude browser/node wrappers; no-op if no key set.
 
-## Features
-- Express + Passport (Google OAuth) with Mongo-backed sessions (connect-mongo)
-- Dev login fallback (`/auth/dev-login`) for quick demos
-- Presence + location API (zod-validated); privacy-respecting: only available users show on the map
-- Paging via email (nodemailer) with 5-minute per-sender/recipient cooldown
-- Ethereal auto-fallback if SMTP creds missing; preview URLs surface in the UI alert
-- Deterministic suggestion engine with simple learning persisted in MongoDB
-- Amplitude instrumentation (client + server) with graceful no-op when no key
-- Leaflet map (OpenStreetMap tiles) + minimal overlay UI in vanilla JS/CSS
+## Environment variables (see `.env.example`)
+- Required: `MONGO_URI`, `SESSION_SECRET`
+- Optional: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL`
+- Optional SMTP (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`) — if missing, Ethereal auto-fallback is used and preview URLs are shown in alerts.
+- Optional: `AMPLITUDE_API_KEY`, `ALLOW_DEV_LOGIN`, `BASE_URL`
 
-## Running locally
+## Auth flows
+- Google: `/auth/google` → `/auth/google/callback` when keys are provided.
+- Dev login: `/auth/dev-login` with `{ email, name? }` when `ALLOW_DEV_LOGIN` is true (default).
+- Logout: `/auth/logout`
+- Current user: `/api/me`
+
+## Key features
+- Presence: `/api/availability`, `/api/location`, `/api/presence` (only available users are returned).
+- Paging: `/api/page` with 5-minute sender→recipient cooldown; nodemailer with Ethereal fallback.
+- Suggestions: `/api/suggestions` and `/api/suggestions/feedback`; weights stored in MongoDB and adjust after a couple clicks.
+- Map: Leaflet markers for available users; client polls presence every ~5s.
+
+## Running locally (detailed)
 ```bash
-npm install
+npm install          # uses package-lock
 cp .env.example .env
-# edit .env with your values
-npm run dev
+# set MONGO_URI + SESSION_SECRET; add Google/SMTP keys if you have them
+npm run dev          # nodemon server.js
 ```
 
-## Paging email (Ethereal)
-- If `SMTP_*` vars are empty, the server auto-creates an Ethereal account.  
-- Send a page; the UI alert shows a “preview” URL. Open it to view the email.
+## Email paging test checklist
+1) Ensure Mongo is running and `MONGO_URI` is valid.
+2) Start server: `npm run dev`.
+3) Open http://localhost:3000 in two browsers/incognito profiles.
+4) Log in both (Dev Login is fine if Google keys aren’t set).
+5) Toggle “Available” and send or simulate location on each.
+6) Click “Page” to send a page. Results:
+   - If SMTP vars are unset: alert shows an Ethereal preview URL; open it to view the email.
+   - If SMTP vars are set correctly: the recipient email inbox should receive it; sender also gets a receipt.
+7) Cooldown: paging the same user again within 5 minutes returns HTTP 429 with a cooldown message.
 
-## Demo tips (multi-window)
-1) Open 2–3 browser/incognito windows to log in as different emails (use Dev Login or Google).  
-2) Toggle “Available”, send location (or enable “Simulate location” and push coords).  
-3) Watch the map update every ~5s; click “Page” to email others.  
-4) Try Accept/Dismiss on suggestions; after a couple clicks the list reorders/changes.
+## Demo tips
+- Multi-user: open 2–3 incognito windows; dev-login with different emails if Google isn’t configured.
+- Location: click “Simulate location” to set lat/lon manually when indoors.
+- Paging: click “Page”; if SMTP isn’t set, use the Ethereal preview link shown in the alert.
+- Suggestions: Accept/Dismiss a couple times to see ordering change (weights +/-2, clamped).
+- Location perms: the app prompts for geolocation on first load; when “Location: Shared” is on (Available), it continuously tracks and sends updates. Use “Simulate location” to bypass GPS.
 
-## Scripts
-- `npm run dev` — start with nodemon
-- `npm start` — run server normally
+## Repo layout
+- Backend: `server.js`, `routes/`, `models/`, `services/`, `config/`
+- Frontend: `public/` (`index.html`, `styles.css`, `app.js`, `auth.js`, `map.js`, `suggestions.js`, `amplitude.js`)
 
-## Working together (team notes)
-- Repo layout: backend in `server.js`, `routes/`, `models/`, `services/`, `config/`; frontend in `public/`.
-- Auth: Google OAuth if keys set; otherwise use `/auth/dev-login` with an email to fake sign-in.
-- DB: MongoDB required; collections auto-create via Mongoose models listed in `models/`.
-- Suggestions: server-side in `services/suggestions.js`; feedback endpoint updates weights.
-- Amplitude: If no key, events become no-ops; safe to develop without it.
-- Styling/JS: vanilla HTML/CSS/JS—no build step. Just edit files in `public/` and refresh.
-
-## Common dev flows
-- Start local: `npm run dev` then open http://localhost:3000
-- Multi-user demo: open multiple incognito windows; dev-login with different emails.
-- Location: use browser geolocation or toggle “Simulate location” and push coords.
-- Paging: click “Page”; if SMTP not configured, check the Ethereal preview URL in the alert.
-
-## Pull requests / coding style
-- Use small, focused changes; keep comments minimal and helpful.
-- Prefer `rg`/`npm test` equivalents if adding tests (none required for MVP).
-- Stick to ES modules style already used (CommonJS backend, plain JS frontend).
+## Team workflow notes
+- Keep changes small and focused; minimal comments.
+- Stick to CommonJS on the server and plain JS in `public/`; no build step.
+- Use `npm install` to respect `package-lock.json`.

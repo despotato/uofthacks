@@ -8,11 +8,13 @@ const usersList = document.getElementById("users-list");
 
 let pollTimer = null;
 let isAvailable = false;
+let geoWatchId = null;
 
 async function bootstrap() {
   await amplitudeClient.initFromServer();
   await fetchMe();
   wireEvents();
+  requestGeolocationPermission();
 
   // Initial State: Sidebar is open, so hide the floating toggle
   const desktopSidebarToggle = document.getElementById(
@@ -46,6 +48,11 @@ function wireEvents() {
 
   simulateToggle.addEventListener("change", (e) => {
     simulateInputs.classList.toggle("hidden", !e.target.checked);
+    if (e.target.checked) {
+      stopLocationWatch();
+    } else {
+      startLocationWatch();
+    }
   });
   pushSimBtn.addEventListener("click", sendLocation);
 
@@ -155,15 +162,35 @@ let lastLon = null;
 
 function startLocationWatch() {
   if (!navigator.geolocation) return;
-  navigator.geolocation.watchPosition(
+  stopLocationWatch();
+  geoWatchId = navigator.geolocation.watchPosition(
     (pos) => {
       const { latitude, longitude } = pos.coords;
       lastLat = latitude;
       lastLon = longitude;
       mapUI.updateMyMarker(latitude, longitude, isAvailable);
+      if (isAvailable && !simulateToggle.checked) {
+        pushLocation(latitude, longitude, pos.coords.accuracy);
+      }
     },
     (err) => console.log("Location watch error", err),
     { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 },
+  );
+}
+
+function stopLocationWatch() {
+  if (geoWatchId !== null && navigator.geolocation) {
+    navigator.geolocation.clearWatch(geoWatchId);
+    geoWatchId = null;
+  }
+}
+
+function requestGeolocationPermission() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    () => {},
+    () => {},
+    { enableHighAccuracy: true, timeout: 3000 },
   );
 }
 
@@ -203,6 +230,9 @@ async function setAvailability(available) {
 
   if (available) {
     sendLocation();
+    if (!simulateToggle.checked) startLocationWatch();
+  } else {
+    stopLocationWatch();
   }
 }
 

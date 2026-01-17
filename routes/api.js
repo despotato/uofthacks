@@ -7,6 +7,7 @@ const { buildSuggestions, recordFeedback } = require('../services/suggestions');
 const { sendPageEmail } = require('../services/mailer');
 const { canSend, recordSend, COOLDOWN_MS } = require('../services/rateLimiter');
 const { trackEvent } = require('../config/amplitude');
+const { updateLiveLocation } = require('../services/locationTracker');
 
 function apiRouter({ mailConfig, amplitudeKeyPublic }) {
   const router = express.Router();
@@ -53,14 +54,7 @@ function apiRouter({ mailConfig, amplitudeKeyPublic }) {
     if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
     const { lat, lon, accuracy } = parsed.data;
     try {
-      const presence = await Presence.findOne({ userId: req.user._id });
-      if (!presence || !presence.available) {
-        return res.status(400).json({ error: 'Set available before sending location' });
-      }
-      presence.lat = lat;
-      presence.lon = lon;
-      presence.accuracy = accuracy;
-      await presence.save();
+      await updateLiveLocation(req.user._id, { lat, lon, accuracy });
       trackEvent('presence_updated', req.user._id, { available: true, lat, lon });
       res.json({ ok: true });
     } catch (err) {
