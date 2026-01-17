@@ -56,6 +56,10 @@ npm run dev          # nodemon server.js
 - Suggestions: Accept/Dismiss a couple times to see ordering change (weights +/-2, clamped).
 - Location perms: the app prompts for geolocation on first load; when “Location: Shared” is on (Available), it continuously tracks and sends updates. Use “Simulate location” to bypass GPS.
 
+## AI agent hook
+- `services/aiAgent.js` exposes `buildPagingContext(userId)` and `decidePagingFromContext(context)`. The latter is a simple rule-based stub; swap it with your AI call and map the AI output back to `{ shouldPage, targetUserId, reason }`.
+- Keep it side-effect free: let the AI decide, then call existing `/api/page` to execute paging so cooldowns, logging, and email delivery still apply.
+
 ## Repo layout
 - Backend: `server.js`, `routes/`, `models/`, `services/`, `config/`
 - Frontend: `public/` (`index.html`, `styles.css`, `app.js`, `auth.js`, `map.js`, `suggestions.js`, `amplitude.js`)
