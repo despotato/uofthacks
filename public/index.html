@@ -11,51 +11,146 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div id="overlay">
-      <div class="section" id="auth-section">
-        <div id="user-info">Not logged in</div>
-        <div class="auth-actions">
-          <button id="google-login">Sign in with Google</button>
-          <button id="logout-btn" class="secondary hidden">Logout</button>
-        </div>
-        <div id="dev-login-block">
-          <input type="email" id="dev-email" placeholder="Dev email" />
-          <input type="text" id="dev-name" placeholder="Name (optional)" />
-          <button id="dev-login-btn" class="secondary">Dev Login</button>
-        </div>
-      </div>
-
-      <div class="section" id="presence-section">
-        <label class="toggle">
-          <input type="checkbox" id="available-toggle" />
-          <span>Available</span>
-        </label>
-        <div class="location-controls">
-          <button id="send-location-btn">Send my location</button>
-          <label class="toggle small">
-            <input type="checkbox" id="simulate-toggle" />
-            <span>Simulate location</span>
-          </label>
-          <div id="simulate-inputs" class="hidden">
-            <input type="number" step="0.0001" id="sim-lat" placeholder="Lat" />
-            <input type="number" step="0.0001" id="sim-lon" placeholder="Lon" />
-            <button id="push-sim-location">Push simulated</button>
+    <div id="login-view" class="view-container">
+      <div class="login-box">
+        <h1>Welcome to Live Friends Map</h1>
+        <div id="auth-section">
+          <!-- Auth controls will be managed by JS visibility, but structure stays here -->
+          <div class="auth-actions">
+            <button id="google-login">Sign in with Google</button>
+          </div>
+          <div class="divider">OR</div>
+          <div id="dev-login-block">
+            <input type="email" id="dev-email" placeholder="Dev email" />
+            <input type="text" id="dev-name" placeholder="Name (optional)" />
+            <button id="dev-login-btn" class="secondary">Dev Login</button>
           </div>
         </div>
       </div>
-
-      <div class="section" id="users-section">
-        <div class="section-title">Available friends</div>
-        <div id="users-list"></div>
-      </div>
-
-      <div class="section" id="suggestions-section">
-        <div class="section-title">Suggestions</div>
-        <div id="suggestions-list"></div>
-      </div>
     </div>
 
-    <div id="map"></div>
+    <div id="app-view" class="view-container hidden">
+      <aside id="sidebar" class="sidebar">
+        <!-- Desktop Nav Rail -->
+        <div class="sidebar-nav">
+          <button
+            class="nav-icon active"
+            data-target="activities-panel"
+            title="Activities"
+          >
+            <span>👥</span>
+          </button>
+          <button class="nav-icon" data-target="profile-panel" title="Profile">
+            <span>👤</span>
+          </button>
+        </div>
+
+        <div class="sidebar-content-wrapper">
+          <div class="sidebar-header">
+            <h2 id="sidebar-title">Activities</h2>
+            <button
+              id="sidebar-close-btn"
+              class="icon-btn"
+              aria-label="Close Sidebar"
+            >
+              ←
+            </button>
+          </div>
+
+          <div class="sidebar-content">
+            <!-- Activities (Default Visible) -->
+            <div class="panel-section" id="activities-panel">
+              <div class="panel-header mobile-only">
+                <h3>Activities</h3>
+              </div>
+              <div id="users-section">
+                <div class="section-title">Friends Online</div>
+                <div id="users-list"></div>
+              </div>
+              <div class="spacer"></div>
+              <div id="suggestions-section">
+                <div class="section-title">Suggestions</div>
+                <div id="suggestions-list"></div>
+              </div>
+            </div>
+
+            <!-- Profile (Hidden by default on desktop) -->
+            <div class="panel-section hidden" id="profile-panel">
+              <div class="panel-header mobile-only">
+                <h3>Profile & Settings</h3>
+              </div>
+              <div class="panel-header desktop-only-flex">
+                <!-- Show user info here for desktop context if needed, or put in header? -->
+                <div id="user-info">Logged in</div>
+                <button id="logout-btn" class="secondary small">Logout</button>
+              </div>
+
+              <div id="presence-section">
+                <button id="available-btn" class="available-btn hidden-state">
+                  Location: Hidden
+                </button>
+                <div class="location-controls">
+                  <label class="toggle small">
+                    <input type="checkbox" id="simulate-toggle" />
+                    <span>Simulate</span>
+                  </label>
+                  <div id="simulate-inputs" class="hidden">
+                    <input
+                      type="number"
+                      step="0.0001"
+                      id="sim-lat"
+                      placeholder="Lat"
+                    />
+                    <input
+                      type="number"
+                      step="0.0001"
+                      id="sim-lon"
+                      placeholder="Lon"
+                    />
+                    <button id="push-sim-location">Push</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main id="main-content">
+        <button id="sidebar-toggle-mobile" class="mobile-only icon-btn">
+          ☰
+        </button>
+        <div id="map"></div>
+        <button
+          id="desktop-sidebar-toggle"
+          class="icon-btn desktop-fab"
+          aria-label="Toggle Sidebar"
+        >
+          ☰
+        </button>
+
+        <!-- Mobile Bottom Nav -->
+        <nav id="bottom-nav">
+          <button class="nav-item" data-target="activities-panel">
+            <span class="icon">👥</span>
+            <span>Activities</span>
+          </button>
+          <button class="nav-item" data-target="profile-panel">
+            <span class="icon">👤</span>
+            <span>Profile</span>
+          </button>
+        </nav>
+      </main>
+
+      <!-- Mobile Sheet Overlay (Container for mobile panel views) -->
+      <div id="mobile-sheet-overlay" class="hidden">
+        <div class="sheet-content" id="sheet-container">
+          <!-- Content will be swapped or shown here via JS logic/CSS -->
+        </div>
+        <button id="close-sheet-btn">×</button>
+      </div>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/amplitude.js"></script>
