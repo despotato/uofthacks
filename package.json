@@ -1,0 +1,26 @@
+{
+  "name": "live-friends-map",
+  "version": "0.1.0",
+  "description": "Map-first live friends web app (hackathon-ready)",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@amplitude/analytics-node": "^1.13.0",
+    "connect-mongo": "^5.1.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.19.2",
+    "express-session": "^1.17.3",
+    "mongoose": "^7.6.1",
+    "morgan": "^1.10.0",
+    "nodemailer": "^6.9.8",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Live Friends Map</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-sA+e2atLYB2kP0bM5lXZ8LO0Ck1bUFz4vIY6Hk0f4bM="
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div id="overlay">
+      <div class="section" id="auth-section">
+        <div id="user-info">Not logged in</div>
+        <div class="auth-actions">
+          <button id="google-login">Sign in with Google</button>
+          <button id="logout-btn" class="secondary hidden">Logout</button>
+        </div>
+        <div id="dev-login-block">
+          <input type="email" id="dev-email" placeholder="Dev email" />
+          <input type="text" id="dev-name" placeholder="Name (optional)" />
+          <button id="dev-login-btn" class="secondary">Dev Login</button>
+        </div>
+      </div>
+
+      <div class="section" id="presence-section">
+        <label class="toggle">
+          <input type="checkbox" id="available-toggle" />
+          <span>Available</span>
+        </label>
+        <div class="location-controls">
+          <button id="send-location-btn">Send my location</button>
+          <label class="toggle small">
+            <input type="checkbox" id="simulate-toggle" />
+            <span>Simulate location</span>
+          </label>
+          <div id="simulate-inputs" class="hidden">
+            <input type="number" step="0.0001" id="sim-lat" placeholder="Lat" />
+            <input type="number" step="0.0001" id="sim-lon" placeholder="Lon" />
+            <button id="push-sim-location">Push simulated</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" id="users-section">
+        <div class="section-title">Available friends</div>
+        <div id="users-list"></div>
+      </div>
+
+      <div class="section" id="suggestions-section">
+        <div class="section-title">Suggestions</div>
+        <div id="suggestions-list"></div>
+      </div>
+    </div>
+
+    <div id="map"></div>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-o9N1j7k1yuN0hX1fscjQkJt8wE1DdKkM6+Z8f2e0Xr0="
+      crossorigin=""
+    ></script>
+    <script src="/amplitude.js"></script>
+    <script src="/auth.js"></script>
+    <script src="/map.js"></script>
+    <script src="/suggestions.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>
